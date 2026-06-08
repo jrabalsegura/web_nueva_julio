@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64" role="img" aria-labelledby="title desc">
+  <title id="title">Resolution Solar Energy logo placeholder</title>
+  <desc id="desc">Placeholder de logotipo para Resolution Solar Energy</desc>
+  <rect width="220" height="64" rx="10" fill="#ffce14"/>
+  <path d="M31 10h24c8 0 14 5 14 13 0 6-3 10-9 12l13 19H55L44 38h-6v16H20V10h11Zm7 14v8h11c3 0 5-2 5-4s-2-4-5-4H38Z" fill="#101010"/>
+  <path d="M27 54 42 34h13L40 54z" fill="#101010"/>
+  <path d="M89 20h77" stroke="#101010" stroke-width="5" stroke-linecap="round"/>
+  <path d="M89 33h99" stroke="#101010" stroke-width="5" stroke-linecap="round"/>
+  <path d="M89 46h70" stroke="#424242" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="176" cy="20" r="7" fill="#fff"/>
+  <path d="M176 9v6M176 25v6M165 20h6M181 20h6M168 12l4 4M180 24l4 4M184 12l-4 4M172 24l-4 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+  <text x="170" y="48" fill="#101010" font-family="Arial, sans-serif" font-size="9" font-weight="700">SOLAR</text>
+</svg>
