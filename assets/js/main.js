@@ -107,7 +107,7 @@
     if (!modal || !project) return;
     lastFocusedElement = document.activeElement;
 
-    const visual = project.querySelector(".placeholder, img");
+    const visual = project.querySelector(".project-media, .placeholder, img");
     const category = project.querySelector("p") ? project.querySelector("p").textContent : "Proyecto";
 
     if (modalTitle) modalTitle.textContent = project.dataset.title || "Proyecto";
