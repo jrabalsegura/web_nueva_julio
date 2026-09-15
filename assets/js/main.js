@@ -6,6 +6,62 @@
   const nav = document.querySelector("[data-nav]");
   const navToggle = document.querySelector("[data-nav-toggle]");
   const backToTop = document.querySelector("[data-back-to-top]");
+  const language = (document.documentElement.lang || "es").slice(0, 2).toLowerCase();
+  const messages = {
+    es: {
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
+      project: "Proyecto",
+      projectDescription: "Descripción del proyecto.",
+      name: "Indica tu nombre.",
+      email: "Introduce un email válido.",
+      phone: "Indica un teléfono de contacto.",
+      service: "Selecciona el tipo de servicio.",
+      message: "Cuéntanos un poco más sobre el proyecto.",
+      privacy: "Debes aceptar la política de privacidad.",
+      success: "Gracias. Hemos recibido tu solicitud de forma simulada y te contactaremos con los datos definitivos cuando el formulario esté conectado."
+    },
+    fr: {
+      openMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
+      project: "Projet",
+      projectDescription: "Description du projet.",
+      name: "Indiquez votre nom.",
+      email: "Saisissez une adresse e-mail valide.",
+      phone: "Indiquez un numéro de téléphone.",
+      service: "Sélectionnez le type de service.",
+      message: "Donnez-nous quelques précisions sur votre projet.",
+      privacy: "Vous devez accepter la politique de confidentialité.",
+      success: "Merci. Votre demande a été enregistrée en mode simulation. Nous vous contacterons avec les informations définitives une fois le formulaire connecté."
+    },
+    en: {
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      project: "Project",
+      projectDescription: "Project description.",
+      name: "Please enter your name.",
+      email: "Enter a valid email address.",
+      phone: "Enter a contact phone number.",
+      service: "Select a service type.",
+      message: "Tell us a little more about the project.",
+      privacy: "You must accept the privacy policy.",
+      success: "Thank you. Your request has been recorded in simulation mode. We will contact you with the final details once the form is connected."
+    },
+    de: {
+      openMenu: "Menü öffnen",
+      closeMenu: "Menü schließen",
+      project: "Projekt",
+      projectDescription: "Projektbeschreibung.",
+      name: "Bitte geben Sie Ihren Namen ein.",
+      email: "Geben Sie eine gültige E-Mail-Adresse ein.",
+      phone: "Geben Sie eine Telefonnummer an.",
+      service: "Wählen Sie eine Leistung aus.",
+      message: "Beschreiben Sie Ihr Projekt bitte etwas genauer.",
+      privacy: "Sie müssen der Datenschutzerklärung zustimmen.",
+      success: "Vielen Dank. Ihre Anfrage wurde im Simulationsmodus erfasst. Sobald das Formular verbunden ist, melden wir uns mit den endgültigen Informationen."
+    }
+  };
+  const copy = messages[language] || messages.es;
 
   function setHeaderState() {
     if (!header) return;
@@ -17,7 +73,7 @@
     nav.classList.remove("is-open");
     navToggle.classList.remove("is-open");
     navToggle.setAttribute("aria-expanded", "false");
-    navToggle.setAttribute("aria-label", "Abrir menú");
+    navToggle.setAttribute("aria-label", copy.openMenu);
     body.classList.remove("nav-open");
   }
 
@@ -26,7 +82,7 @@
       const isOpen = nav.classList.toggle("is-open");
       navToggle.classList.toggle("is-open", isOpen);
       navToggle.setAttribute("aria-expanded", String(isOpen));
-      navToggle.setAttribute("aria-label", isOpen ? "Cerrar menú" : "Abrir menú");
+      navToggle.setAttribute("aria-label", isOpen ? copy.closeMenu : copy.openMenu);
       body.classList.toggle("nav-open", isOpen);
     });
 
@@ -76,6 +132,7 @@
 
   const filterButtons = document.querySelectorAll("[data-filter]");
   const projectItems = document.querySelectorAll(".project-item");
+  const projectsGrid = document.querySelector("[data-projects-grid]");
 
   if (filterButtons.length && projectItems.length) {
     filterButtons.forEach(function (button) {
@@ -92,6 +149,13 @@
           const shouldShow = filter === "todos" || project.dataset.category === filter;
           project.classList.toggle("is-hidden", !shouldShow);
         });
+
+        if (projectsGrid) {
+          const visibleCount = Array.from(projectItems).filter(function (project) {
+            return !project.classList.contains("is-hidden");
+          }).length;
+          projectsGrid.classList.toggle("has-single-result", visibleCount === 1);
+        }
       });
     });
   }
@@ -108,11 +172,11 @@
     lastFocusedElement = document.activeElement;
 
     const visual = project.querySelector(".project-media, .placeholder, img");
-    const category = project.querySelector("p") ? project.querySelector("p").textContent : "Proyecto";
+    const category = project.querySelector("p") ? project.querySelector("p").textContent : copy.project;
 
-    if (modalTitle) modalTitle.textContent = project.dataset.title || "Proyecto";
+    if (modalTitle) modalTitle.textContent = project.dataset.title || copy.project;
     if (modalCategory) modalCategory.textContent = category;
-    if (modalDescription) modalDescription.textContent = project.dataset.description || "Descripción del proyecto.";
+    if (modalDescription) modalDescription.textContent = project.dataset.description || copy.projectDescription;
     if (modalImage && visual) {
       modalImage.innerHTML = "";
       modalImage.appendChild(visual.cloneNode(true));
@@ -200,32 +264,32 @@
       });
 
       if (!fields.name.value.trim()) {
-        setFieldError(fields.name, "Indica tu nombre.");
+        setFieldError(fields.name, copy.name);
         isValid = false;
       }
 
       if (!validateEmail(fields.email.value.trim())) {
-        setFieldError(fields.email, "Introduce un email válido.");
+        setFieldError(fields.email, copy.email);
         isValid = false;
       }
 
       if (fields.phone.value.trim().length < 6) {
-        setFieldError(fields.phone, "Indica un teléfono de contacto.");
+        setFieldError(fields.phone, copy.phone);
         isValid = false;
       }
 
       if (!fields.service.value) {
-        setFieldError(fields.service, "Selecciona el tipo de servicio.");
+        setFieldError(fields.service, copy.service);
         isValid = false;
       }
 
       if (fields.message.value.trim().length < 10) {
-        setFieldError(fields.message, "Cuéntanos un poco más sobre el proyecto.");
+        setFieldError(fields.message, copy.message);
         isValid = false;
       }
 
       if (!fields.privacy.checked) {
-        setFieldError(fields.privacy, "Debes aceptar la política de privacidad.");
+        setFieldError(fields.privacy, copy.privacy);
         isValid = false;
       }
 
@@ -239,7 +303,7 @@
 
       contactForm.reset();
       if (success) {
-        success.textContent = "Gracias. Hemos recibido tu solicitud de forma simulada y te contactaremos con los datos definitivos cuando el formulario esté conectado.";
+        success.textContent = copy.success;
       }
     });
   }

@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Proyectos de instalaciones renovables | Resolution Solar Energy</title>
-  <meta name="description" content="Proyectos reales de autoconsumo fotovoltaico, instalaciones solares aisladas con baterías y renovación de sistemas existentes de Resolution Solar Energy.">
+  <meta name="description" content="Proyectos reales de autoconsumo fotovoltaico, sistemas aislados, renovaciones e instalaciones HVAC con recuperación de calor de Resolution Solar Energy.">
   <meta name="theme-color" content="#ffce14">
+  <link rel="alternate" hreflang="es" href="https://www.resolutionsolarenergy.es/proyectos.html">
+  <link rel="alternate" hreflang="fr" href="https://www.resolutionsolarenergy.es/fr/proyectos.html">
+  <link rel="alternate" hreflang="en" href="https://www.resolutionsolarenergy.es/en/proyectos.html">
+  <link rel="alternate" hreflang="de" href="https://www.resolutionsolarenergy.es/de/proyectos.html">
+  <link rel="alternate" hreflang="x-default" href="https://www.resolutionsolarenergy.es/proyectos.html">
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
@@ -14,7 +19,19 @@
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="Resolution Solar Energy - Inicio"><img src="assets/img/web/logo-resolution.jpg" alt="Resolution Solar Energy"></a>
       <button class="nav-toggle" type="button" data-nav-toggle aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
-      <nav class="main-nav" data-nav aria-label="Navegación principal"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a class="is-active" aria-current="page" href="proyectos.html">Proyectos</a><a href="sobre-nosotros.html">Sobre nosotros</a><a href="contacto.html">Contacto</a></nav>
+      <nav class="main-nav" data-nav aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="servicios.html">Servicios</a>
+        <a class="is-active" aria-current="page" href="proyectos.html">Proyectos</a>
+        <a href="sobre-nosotros.html">Sobre nosotros</a>
+        <a href="contacto.html">Contacto</a>
+        <div class="language-switcher" aria-label="Idioma">
+          <a class="is-current" aria-current="true" hreflang="es" lang="es" href="proyectos.html">ES</a>
+          <a hreflang="fr" lang="fr" href="fr/proyectos.html">FR</a>
+          <a hreflang="en" lang="en" href="en/proyectos.html">EN</a>
+          <a hreflang="de" lang="de" href="de/proyectos.html">DE</a>
+        </div>
+      </nav>
       <a class="btn btn-small btn-primary header-cta" href="contacto.html">Pedir presupuesto</a>
     </div>
   </header>
@@ -25,7 +42,7 @@
         <div class="reveal">
           <p class="eyebrow">Trabajos reales</p>
           <h1>Proyectos que muestran el resultado y el detalle técnico</h1>
-          <p>Una selección de instalaciones de autoconsumo, sistemas aislados con almacenamiento y renovaciones completas. Cada imagen corresponde a trabajos reales de Resolution Solar Energy.</p>
+          <p>Una selección de instalaciones de autoconsumo, sistemas aislados con almacenamiento, renovaciones y ventilación con recuperación de calor. Cada imagen corresponde a trabajos reales de Resolution Solar Energy.</p>
         </div>
         <img class="hero-photo reveal" src="assets/img/web/aislada-rural.jpg" alt="Paneles solares de una instalación aislada en un entorno rural" width="1400" height="1050">
       </div>
@@ -37,6 +54,7 @@
           <button class="filter-btn is-active" type="button" data-filter="todos" aria-pressed="true">Todos</button>
           <button class="filter-btn" type="button" data-filter="autoconsumo" aria-pressed="false">Autoconsumo</button>
           <button class="filter-btn" type="button" data-filter="aislada" aria-pressed="false">Sistemas aislados</button>
+          <button class="filter-btn" type="button" data-filter="hvac" aria-pressed="false">HVAC</button>
           <button class="filter-btn" type="button" data-filter="renovacion" aria-pressed="false">Antes y después</button>
         </div>
 
@@ -65,6 +83,16 @@
             <button class="project-open" type="button" aria-label="Abrir proyecto Control de instalación solar aislada"><div class="project-media"><img src="assets/img/web/aislada-control.jpg" alt="Equipos Victron y cuadro de control de una instalación solar aislada" width="1400" height="1050" loading="lazy"></div></button>
             <p>Sistema aislado</p><h2>Control y regulación Victron</h2><span>Equipos organizados para facilitar operación y mantenimiento.</span>
           </article>
+          <article class="project-card project-item reveal" data-category="hvac" data-title="Ventilación con recuperación de calor" data-description="Instalación HVAC con unidad central S&amp;P Nashira, conductos aislados y tomas exteriores. El sistema renueva el aire interior y recupera parte de la energía del aire extraído.">
+            <button class="project-open" type="button" aria-label="Abrir proyecto Ventilación con recuperación de calor">
+              <div class="project-media project-media-hvac">
+                <figure class="project-media-main"><img src="assets/img/web/hvac-recuperador-calor.jpg" alt="Unidad de recuperación de calor S&amp;P Nashira" width="1350" height="1800" loading="lazy"></figure>
+                <figure><img src="assets/img/web/hvac-salidas-exteriores.jpg" alt="Tomas exteriores del sistema de ventilación" width="1800" height="1350" loading="lazy"></figure>
+                <figure><img src="assets/img/web/hvac-conductos-aislados.jpg" alt="Conductos aislados conectados al recuperador de calor" width="1800" height="1350" loading="lazy"></figure>
+              </div>
+            </button>
+            <p>HVAC</p><h2>Recuperador de calor para vivienda</h2><span>Unidad central, conductos aislados y salidas exteriores coordinadas.</span>
+          </article>
           <article class="project-card project-item reveal" id="renovacion-integral" data-category="renovacion" data-title="Renovación integral de una instalación aislada" data-description="Sustitución de un sistema antiguo y complejo por una solución ordenada, protegida y con almacenamiento moderno para recuperar fiabilidad y capacidad de servicio.">
             <button class="project-open" type="button" aria-label="Abrir comparativa de renovación integral de una instalación aislada">
               <div class="project-media comparison-media">
@@ -92,9 +120,9 @@
             <div><h3>Drones y termografía</h3><p>Inspección de cubiertas, paneles y zonas de difícil acceso para detectar anomalías y planificar actuaciones.</p></div>
             <b aria-hidden="true">→</b>
           </a>
-          <a class="capability-item reveal" href="servicios.html#aerotermia">
+          <a class="capability-item reveal" href="servicios.html#hvac">
             <span aria-hidden="true">02</span>
-            <div><h3>Climatización y aerotermia</h3><p>Soluciones de calefacción, refrigeración y ACS orientadas a confort, eficiencia y mantenimiento.</p></div>
+            <div><h3>HVAC y recuperación de calor</h3><p>Ventilación, calefacción y climatización orientadas al confort, la eficiencia y la calidad del aire interior.</p></div>
             <b aria-hidden="true">→</b>
           </a>
           <a class="capability-item reveal" href="servicios.html#cargadores">
@@ -135,9 +163,9 @@
 
   <footer class="site-footer">
     <div class="container footer-grid">
-      <div><a class="brand footer-brand" href="index.html"><img src="assets/img/web/logo-resolution.jpg" alt="Resolution Solar Energy"></a><p>Ingeniería solar, energías renovables e instalaciones técnicas con acompañamiento integral.</p></div>
+      <div><a class="brand footer-brand" href="index.html"><img src="assets/img/web/logo-resolution.jpg" alt="Resolution Solar Energy"></a><p>Ingeniería, inspección, instalación y mantenimiento.</p></div>
       <div><h2>Enlaces</h2><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="sobre-nosotros.html">Sobre nosotros</a><a href="contacto.html">Contacto</a></div>
-      <div><h2>Servicios</h2><a href="servicios.html#solar-fotovoltaica">Solar fotovoltaica</a><a href="servicios.html#aerotermia">Aerotermia</a><a href="servicios.html#drones">Inspección con drones</a><a href="servicios.html#cargadores">Cargadores VE</a></div>
+      <div><h2>Servicios</h2><a href="servicios.html#solar-fotovoltaica">Solar fotovoltaica</a><a href="servicios.html#hvac">HVAC y recuperación de calor</a><a href="servicios.html#drones">Inspección con drones</a><a href="servicios.html#cargadores">Cargadores VE</a></div>
       <div><h2>Contacto</h2><p><a href="tel:+34670737965">+34 670 737 965</a></p><p><a href="mailto:juliorabal@hotmail.com">juliorabal@hotmail.com</a></p><p>Zona de trabajo: España</p></div>
     </div>
     <div class="container footer-bottom"><span>© 2026 Resolution Solar Energy. Todos los derechos reservados.</span><span><a href="contacto.html">Aviso legal</a> · <a href="contacto.html">Política de privacidad</a></span></div>
