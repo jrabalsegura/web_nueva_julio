@@ -117,16 +117,19 @@ button {
 }
 
 .header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
   min-height: var(--header-height);
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
   min-width: 0;
   color: var(--color-bg-strong);
   font-weight: 800;
@@ -139,6 +142,11 @@ button {
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(16, 16, 16, 0.08);
+}
+
+.site-header .brand img {
+  width: min(100%, 112px);
+  height: 42px;
 }
 
 .main-nav {
@@ -200,16 +208,13 @@ button {
   background: var(--color-accent-soft);
 }
 
-.main-nav .language-switcher a.is-current {
-  border-color: var(--color-secondary);
-  background: var(--color-secondary);
-  color: #fff;
-}
-
 .nav-toggle {
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
   width: 44px;
   height: 44px;
   gap: 5px;
@@ -241,7 +246,11 @@ button {
 }
 
 .header-cta {
-  display: none;
+  display: inline-flex;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  white-space: nowrap;
 }
 
 .btn {
@@ -1327,6 +1336,11 @@ h3 {
     width: min(100% - 48px, var(--container));
   }
 
+  .site-header .brand img {
+    width: 176px;
+    height: 50px;
+  }
+
   .gallery-preview,
   .brand-logos {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1394,6 +1408,16 @@ h3 {
 }
 
 @media (min-width: 900px) {
+  .header-inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .header-cta {
+    display: none;
+  }
+
   .nav-toggle {
     display: none;
   }

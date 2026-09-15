@@ -341,10 +341,9 @@ function switcher(locale, page) {
     de: locale === "de" ? page : `../de/${page}`
   };
 
-  const links = ["es", "fr", "en", "de"].map((code) => {
-    const current = code === locale ? ' class="is-current" aria-current="true"' : "";
-    return `          <a${current} hreflang="${code}" lang="${code}" href="${hrefs[code]}">${code.toUpperCase()}</a>`;
-  });
+  const links = ["es", "fr", "en", "de"]
+    .filter((code) => code !== locale)
+    .map((code) => `          <a hreflang="${code}" lang="${code}" href="${hrefs[code]}">${code.toUpperCase()}</a>`);
 
   return [
     `        <div class="language-switcher" aria-label="${languageNames[locale]}">`,
