@@ -46,25 +46,31 @@
 
     <section class="section">
       <div class="container contact-grid">
-        <form class="contact-form reveal" data-contact-form novalidate>
+        <form class="contact-form reveal" data-contact-form action="https://formsubmit.co/jrabal.segura@gmail.com" method="POST">
+          <input type="hidden" name="_subject" value="Nueva solicitud · Resolution Solar Energy">
+          <input type="hidden" name="_template" value="table">
+          <div class="form-honeypot" aria-hidden="true" inert>
+            <label for="website">Deja este campo vacío</label>
+            <input id="website" name="_honey" type="text" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-row">
             <label for="name">Nombre</label>
-            <input id="name" name="name" type="text" autocomplete="name" required>
-            <small class="field-error" data-error-for="name"></small>
+            <input id="name" name="name" type="text" autocomplete="name" maxlength="120" aria-describedby="name-error" required>
+            <small class="field-error" id="name-error" data-error-for="name"></small>
           </div>
           <div class="form-row">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="email" required>
-            <small class="field-error" data-error-for="email"></small>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" aria-describedby="email-error" required>
+            <small class="field-error" id="email-error" data-error-for="email"></small>
           </div>
           <div class="form-row">
             <label for="phone">Teléfono</label>
-            <input id="phone" name="phone" type="tel" autocomplete="tel" required>
-            <small class="field-error" data-error-for="phone"></small>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" minlength="6" maxlength="40" aria-describedby="phone-error" required>
+            <small class="field-error" id="phone-error" data-error-for="phone"></small>
           </div>
           <div class="form-row">
             <label for="service">Tipo de servicio</label>
-            <select id="service" name="service" required>
+            <select id="service" name="service" aria-describedby="service-error" required>
               <option value="">Selecciona una opción</option>
               <option value="fotovoltaica">Solar fotovoltaica</option>
               <option value="solar-termica">Solar térmica</option>
@@ -85,20 +91,20 @@
               <option value="aislamiento">Aislamiento térmico y acústico</option>
               <option value="otro">Otro servicio técnico</option>
             </select>
-            <small class="field-error" data-error-for="service"></small>
+            <small class="field-error" id="service-error" data-error-for="service"></small>
           </div>
           <div class="form-row full">
             <label for="message">Mensaje</label>
-            <textarea id="message" name="message" rows="6" required></textarea>
-            <small class="field-error" data-error-for="message"></small>
+            <textarea id="message" name="message" rows="6" minlength="10" maxlength="5000" aria-describedby="message-error" required></textarea>
+            <small class="field-error" id="message-error" data-error-for="message"></small>
           </div>
           <div class="form-row checkbox-row full">
-            <input id="privacy" name="privacy" type="checkbox" required>
+            <input id="privacy" name="privacy" type="checkbox" aria-describedby="privacy-error" required>
             <label for="privacy">Acepto la política de privacidad.</label>
-            <small class="field-error" data-error-for="privacy"></small>
+            <small class="field-error" id="privacy-error" data-error-for="privacy"></small>
           </div>
           <button class="btn btn-primary" type="submit">Enviar solicitud</button>
-          <p class="form-success" data-form-success role="status" aria-live="polite"></p>
+          <p class="form-status" data-form-status role="status" aria-live="polite" aria-atomic="true"></p>
         </form>
 
         <aside class="contact-aside reveal">
@@ -107,12 +113,19 @@
             <p><strong>Teléfono:</strong> <a href="tel:+34670737965">+34 670 737 965</a></p>
             <p><strong>Email:</strong> <a href="mailto:juliorabal@hotmail.com">juliorabal@hotmail.com</a></p>
             <p><strong>Instagram:</strong> <a href="https://www.instagram.com/resolutionsolarenergy/">@resolutionsolarenergy</a></p>
-            <p><strong>Zona de trabajo:</strong> España</p>
+            <p><strong>Zona de trabajo:</strong> Levante y sureste de España</p>
           </div>
-          <div class="map-placeholder" aria-label="Mapa placeholder">
-            <span>Mapa / zona de trabajo</span>
-            <small>Placeholder listo para Google Maps o mapa estático</small>
-          </div>
+          <figure class="coverage-panel">
+            <div class="coverage-heading">
+              <p class="eyebrow">Cerca de tu proyecto</p>
+              <h2>Levante y sureste</h2>
+            </div>
+            <img class="coverage-map" src="assets/img/web/zona-levante-sureste.svg" width="600" height="410" alt="Mapa de España peninsular y Baleares con la franja de Levante y el sureste destacada en amarillo." loading="lazy">
+            <figcaption>
+              <p class="coverage-legend"><span aria-hidden="true"></span>Zona habitual de trabajo</p>
+              <p>Cuéntanos dónde está tu proyecto y estudiamos cómo ayudarte.</p>
+            </figcaption>
+          </figure>
           <div class="info-panel">
             <h2>Presupuesto personalizado</h2>
             <p>Para afinar la propuesta, indica ubicación aproximada, tipo de inmueble, consumo, objetivo principal y fotos del espacio cuando estén disponibles.</p>
@@ -127,7 +140,7 @@
       <div><a class="brand footer-brand" href="index.html"><img src="assets/img/web/logo-resolution.jpg" alt="Resolution Solar Energy"></a><p>Ingeniería, inspección, instalación y mantenimiento.</p></div>
       <div><h2>Enlaces</h2><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="proyectos.html">Proyectos</a><a href="sobre-nosotros.html">Sobre nosotros</a></div>
       <div><h2>Servicios</h2><a href="servicios.html#solar-fotovoltaica">Solar fotovoltaica</a><a href="servicios.html#hvac">HVAC y recuperación de calor</a><a href="servicios.html#drones">Inspección con drones</a><a href="servicios.html#cargadores">Cargadores VE</a></div>
-      <div><h2>Contacto</h2><p><a href="tel:+34670737965">+34 670 737 965</a></p><p><a href="mailto:juliorabal@hotmail.com">juliorabal@hotmail.com</a></p><p>Zona de trabajo: España</p></div>
+      <div><h2>Contacto</h2><p><a href="tel:+34670737965">+34 670 737 965</a></p><p><a href="mailto:juliorabal@hotmail.com">juliorabal@hotmail.com</a></p><p>Zona de trabajo: Levante y sureste</p></div>
     </div>
     <div class="container footer-bottom"><span>© 2026 Resolution Solar Energy. Todos los derechos reservados.</span><span><a href="contacto.html">Aviso legal</a> · <a href="contacto.html">Política de privacidad</a></span></div>
   </footer>
