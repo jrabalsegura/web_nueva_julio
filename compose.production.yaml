@@ -1,0 +1,24 @@
+name: resolution-solar
+services:
+  web:
+    build: .
+    env_file: .env
+    environment:
+      PORT: 3000
+      PUBLIC_DIR: /app/public
+      DATABASE_PATH: /app/data/contacts.sqlite
+    ports:
+      - "127.0.0.1:${APP_PORT:-3080}:3000"
+    volumes:
+      - contacts:/app/data
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  contacts:
