@@ -1140,11 +1140,27 @@ h3 {
   margin-top: 0.2rem;
 }
 
-.form-success {
+.form-status {
   min-height: 1.4rem;
   margin: 0;
+  font-weight: 700;
+}
+
+.form-status[data-state="success"] {
   color: #166534;
-  font-weight: 900;
+}
+
+.form-status[data-state="error"] {
+  color: #b42318;
+}
+
+.contact-form > .btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.form-honeypot {
+  display: none;
 }
 
 .contact-aside {
@@ -1152,29 +1168,64 @@ h3 {
   gap: 1rem;
 }
 
-.map-placeholder {
-  display: grid;
-  place-items: center;
-  min-height: 260px;
-  border: 1px dashed rgba(16, 16, 16, 0.35);
+.coverage-panel {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #343434;
   border-radius: var(--radius-md);
   background:
-    linear-gradient(90deg, rgba(16, 16, 16, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(16, 16, 16, 0.08) 1px, transparent 1px),
-    var(--color-bg-soft);
-  background-size: 28px 28px;
-  color: var(--color-secondary);
-  text-align: center;
+    radial-gradient(ellipse at 80% 55%, rgba(255, 206, 20, 0.08), transparent 65%),
+    #191b1e;
+  color: #fff;
 }
 
-.map-placeholder span {
-  display: block;
-  font-size: 1.25rem;
-  font-weight: 900;
+.coverage-heading {
+  padding: 1.5rem 1.5rem 0;
 }
 
-.map-placeholder small {
-  color: var(--color-muted);
+.coverage-heading .eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.coverage-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.coverage-map {
+  width: 100%;
+  height: auto;
+}
+
+.coverage-panel figcaption {
+  margin: 0 1.5rem;
+  border-top: 1px solid #414245;
+  padding: 1rem 0 1.5rem;
+}
+
+.coverage-panel figcaption p {
+  margin: 0;
+  color: #c5c7cb;
+}
+
+.coverage-panel .coverage-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.coverage-legend span {
+  flex: 0 0 20px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--color-primary);
 }
 
 .check-list {
@@ -1357,7 +1408,7 @@ h3 {
 
   .form-row.full,
   .contact-form > .btn,
-  .form-success {
+  .form-status {
     grid-column: 1 / -1;
   }
 }

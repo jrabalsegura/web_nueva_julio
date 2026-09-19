@@ -227,7 +227,7 @@ const entries = [
   ["Enlaces", "Links", "Liens", "Links"],
   ["HVAC y recuperación de calor", "HVAC and heat recovery", "CVC et récupération de chaleur", "HLK und Wärmerückgewinnung"],
   ["Cargadores VE", "EV chargers", "Bornes VE", "E-Ladestationen"],
-  ["Zona de trabajo: España", "Service area: Spain", "Zone d'intervention : Espagne", "Einsatzgebiet: Spanien"],
+  ["Zona de trabajo: Levante y sureste", "Service area: eastern and southeastern Spain", "Zone d'intervention : est et sud-est de l'Espagne", "Einsatzgebiet: Ost- und Südostspanien"],
   ["© 2026 Resolution Solar Energy. Todos los derechos reservados.", "© 2026 Resolution Solar Energy. All rights reserved.", "© 2026 Resolution Solar Energy. Tous droits réservés.", "© 2026 Resolution Solar Energy. Alle Rechte vorbehalten."],
   ["Aviso legal", "Legal notice", "Mentions légales", "Impressum"],
   ["Política de privacidad", "Privacy policy", "Politique de confidentialité", "Datenschutzerklärung"],
@@ -326,8 +326,14 @@ const entries = [
   ["Datos de contacto", "Contact details", "Coordonnées", "Kontaktdaten"],
   ["Teléfono:", "Phone:", "Téléphone :", "Telefon:"],
   ["Zona de trabajo:", "Service area:", "Zone d'intervention :", "Einsatzgebiet:"],
-  ["Mapa placeholder", "Map placeholder", "Emplacement de la carte", "Kartenplatzhalter"],
-  ["Mapa / zona de trabajo", "Map / service area", "Carte / zone d'intervention", "Karte / Einsatzgebiet"],
+  ["Nueva solicitud · Resolution Solar Energy", "New enquiry · Resolution Solar Energy", "Nouvelle demande · Resolution Solar Energy", "Neue Anfrage · Resolution Solar Energy"],
+  ["Deja este campo vacío", "Leave this field empty", "Laissez ce champ vide", "Dieses Feld leer lassen"],
+  ["Cerca de tu proyecto", "Close to your project", "Près de votre projet", "In der Nähe Ihres Projekts"],
+  ["Levante y sureste de España", "Eastern and southeastern Spain", "Est et sud-est de l'Espagne", "Ost- und Südostspanien"],
+  ["Levante y sureste", "Eastern &amp; southeastern Spain", "Est et sud-est de l'Espagne", "Ost- und Südostspanien"],
+  ["Zona habitual de trabajo", "Our main service area", "Notre zone d'intervention habituelle", "Unser übliches Einsatzgebiet"],
+  ["Mapa de España peninsular y Baleares con la franja de Levante y el sureste destacada en amarillo.", "Map of mainland Spain and the Balearic Islands with the eastern and southeastern area highlighted in yellow.", "Carte de l'Espagne péninsulaire et des Baléares, avec la zone est et sud-est en jaune.", "Karte des spanischen Festlands und der Balearen mit gelb hervorgehobenem Osten und Südosten."],
+  ["Cuéntanos dónde está tu proyecto y estudiamos cómo ayudarte.", "Tell us where your project is and we will explore how we can help.", "Indiquez-nous où se situe votre projet et nous étudierons comment vous aider.", "Teilen Sie uns mit, wo Ihr Projekt liegt. Wir prüfen, wie wir Ihnen helfen können."],
   ["Presupuesto personalizado", "Tailored quote", "Devis personnalisé", "Individuelles Angebot"]
 ];
 
