@@ -1,0 +1,43 @@
+name: resolution-solar-local
+services:
+  web:
+    build: .
+    env_file: .env
+    environment:
+      PORT: 3000
+      PUBLIC_DIR: /app/public
+      DATABASE_PATH: /app/data/contacts.sqlite
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_SECURE: "false"
+      SMTP_REQUIRE_TLS: "false"
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+    ports:
+      - "127.0.0.1:${APP_PORT:-3080}:3000"
+    volumes:
+      - contacts:/app/data
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+  mailpit:
+    image: axllent/mailpit@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
+    ports:
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 500
+    volumes:
+      - mailpit:/data
+    restart: unless-stopped
+volumes:
+  contacts:
+  mailpit:

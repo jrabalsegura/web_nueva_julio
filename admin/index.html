@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#ffce14">
+  <title>Solicitudes · Resolution Solar Energy</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="/admin/admin.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Resolution Solar Energy · Volver a la web"><img src="/assets/img/web/logo-resolution.jpg" alt="Resolution Solar Energy"></a>
+    <span class="area-label">Administración</span>
+    <div class="account-actions">
+      <button id="open-password-account" class="button ghost" hidden>Cambiar contraseña</button>
+      <button id="logout" class="button ghost" hidden>Cerrar sesión</button>
+    </div>
+  </header>
+  <main id="main">
+    <section id="login-panel" class="login-panel" hidden aria-labelledby="login-title">
+      <div class="login-mark" aria-hidden="true"></div>
+      <p class="eyebrow">Resolution Solar Energy</p>
+      <h1 id="login-title">Acceso privado</h1>
+      <p class="muted">Entra para consultar las solicitudes de contacto.</p>
+      <form id="login-form" method="post" action="/api/admin/login">
+        <label for="username">Usuario</label>
+        <input id="username" name="username" autocomplete="username" required maxlength="100" autocapitalize="none" spellcheck="false">
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256">
+        <button type="submit" class="button primary">Entrar</button>
+        <p id="login-error" class="error" role="alert"></p>
+        <p id="login-success" class="success" role="status"></p>
+      </form>
+      <button id="open-password-login" type="button" class="text-button">Cambiar contraseña</button>
+      <a class="back-link" href="/">Volver a la web</a>
+    </section>
+    <section id="password-panel" class="login-panel" hidden aria-labelledby="password-title">
+      <div class="login-mark" aria-hidden="true"></div>
+      <p class="eyebrow">Acceso privado</p>
+      <h1 id="password-title">Cambiar contraseña</h1>
+      <p class="muted">Introduce tu contraseña actual. Al guardar el cambio se cerrarán todas las sesiones.</p>
+      <form id="password-form" method="post" action="/api/admin/change-password">
+        <label for="change-username">Usuario</label>
+        <input id="change-username" name="username" autocomplete="username" required maxlength="100" autocapitalize="none" spellcheck="false">
+        <label for="current-password">Contraseña actual</label>
+        <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required maxlength="256">
+        <label for="new-password">Nueva contraseña</label>
+        <input id="new-password" name="newPassword" type="password" autocomplete="new-password" required minlength="14" maxlength="256" aria-describedby="password-hint">
+        <p id="password-hint" class="field-hint">Al menos 14 caracteres. Puedes usar una frase larga y única.</p>
+        <label for="confirm-password">Repite la nueva contraseña</label>
+        <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required minlength="14" maxlength="256">
+        <button type="submit" class="button primary">Guardar contraseña</button>
+        <p id="password-error" class="error" role="alert"></p>
+      </form>
+      <button id="cancel-password" type="button" class="text-button">Volver</button>
+    </section>
+    <section id="inbox" class="inbox" hidden aria-labelledby="inbox-title">
+      <div class="page-heading">
+        <div><p class="eyebrow">Contacto</p><h1 id="inbox-title">Solicitudes</h1><p id="summary" class="muted"></p></div>
+        <button id="refresh" class="button secondary">Actualizar</button>
+      </div>
+      <div class="filters" role="group" aria-label="Filtrar solicitudes">
+        <button class="filter" data-status="all" aria-pressed="true">Todas</button>
+        <button class="filter" data-status="pending" aria-pressed="false">Pendientes</button>
+        <button class="filter" data-status="handled" aria-pressed="false">Atendidas</button>
+      </div>
+      <p id="inbox-error" class="error" role="alert"></p>
+      <div class="workspace">
+        <section class="list-panel" aria-label="Bandeja de solicitudes">
+          <div id="contact-list" class="contact-list" aria-live="polite"></div>
+          <nav id="pagination" class="pagination" aria-label="Páginas de solicitudes" hidden>
+            <button id="previous" class="button secondary">Anterior</button><span id="page-label"></span><button id="next" class="button secondary">Siguiente</button>
+          </nav>
+        </section>
+        <section id="detail" class="detail" aria-label="Detalle de la solicitud" tabindex="-1"><div class="empty"><h2>Elige una solicitud</h2><p>Sus datos y el mensaje aparecerán aquí.</p></div></section>
+      </div>
+    </section>
+    <p id="initial-loading" class="initial-loading" role="status">Comprobando sesión…</p>
+  </main>
+</body>
+</html>

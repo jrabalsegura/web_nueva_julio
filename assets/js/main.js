@@ -261,6 +261,7 @@
   if (contactForm) {
     // Keep native validation and the standard POST as a fallback without JS.
     contactForm.noValidate = true;
+    const selfHosted = contactForm.dataset.selfHosted === "true";
     const submitButton = contactForm.querySelector('[type="submit"]');
     const submitLabel = submitButton.textContent;
     const status = contactForm.querySelector("[data-form-status]");
@@ -328,7 +329,7 @@
 
       const payload = Object.fromEntries(new FormData(contactForm));
       payload.email = fields.email.value.trim();
-      payload.service = fields.service.selectedOptions[0].textContent;
+      payload.service = selfHosted ? fields.service.value : fields.service.selectedOptions[0].textContent;
       payload.language = language;
       payload._url = window.location.origin + window.location.pathname;
 
@@ -357,6 +358,10 @@
           showFormStatus("error", copy.activation);
         } else if (result.success === true || result.success === "true") {
           contactForm.reset();
+          if (selfHosted) {
+            const submissionId = contactForm.elements.submission_id;
+            submissionId.value = submissionId.defaultValue = crypto.randomUUID();
+          }
           showFormStatus("success", copy.success);
         } else {
           throw new Error("Form submission was not accepted");
