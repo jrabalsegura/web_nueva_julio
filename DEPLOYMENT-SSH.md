@@ -147,13 +147,16 @@ sudo env QUADLET_UNIT_DIRS=/etc/containers/systemd \
   /usr/lib/systemd/system-generators/podman-system-generator --dryrun
 ```
 
-Comprueba que genera `resolution-solar.service` sin errores de claves desconocidas.
+Comprueba que genera `resolution-solar.service` sin errores de claves desconocidas
+y que `ExecStart` incluye `--health-cmd`. La plantilla define `HealthCmd`
+explícitamente: Podman construye en formato OCI por defecto y puede omitir
+el `HEALTHCHECK` del Dockerfile. `HealthOnFailure=kill` requiere ese comando.
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start resolution-solar.service
 sudo systemctl status resolution-solar.service --no-pager
-curl -fsS http://127.0.0.1:3089/healthz
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
 sudo podman inspect resolution-solar --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'
 ```
 
@@ -164,8 +167,8 @@ mediante `sudoedit`, antes de publicar Nginx:
 ```bash
 sudoedit /etc/resolution-solar/app.env
 sudo systemctl restart resolution-solar.service
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
 sudo podman healthcheck run resolution-solar
-curl -fsS http://127.0.0.1:3089/healthz
 ```
 
 Ejemplo si el gateway obtenido es ese: `TRUST_PROXY=10.88.0.1`. No configures
@@ -175,6 +178,36 @@ bridge antes de seguir. Recomprueba este valor si cambias la red de Podman.
 
 Quadlet ya incluye `WantedBy=multi-user.target`: arranca al reiniciar el
 servidor. No se ejecuta `systemctl enable` sobre el servicio generado.
+
+### Si ya se instaló la plantilla sin `HealthCmd`
+
+El error `cannot set on-failure action to kill without a health check` se
+corrige instalando la plantilla actualizada; no requiere reconstruir la imagen
+ni cambiar el archivo de entorno o la base de datos. Después de subir el archivo
+corregido a `/var/www/resolution-solar/deploy/quadlet/resolution-solar.container`:
+
+```bash
+sudo systemctl stop resolution-solar.service
+sudo install -m 0644 /var/www/resolution-solar/deploy/quadlet/resolution-solar.container \
+  /etc/containers/systemd/resolution-solar.container
+sudo systemctl daemon-reload
+sudo systemctl reset-failed resolution-solar.service
+sudo systemctl start resolution-solar.service
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
+sudo podman healthcheck run resolution-solar
+sudo podman inspect resolution-solar --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'
+```
+
+Si vuelve a fallar, detener los reintentos y leer el error completo:
+
+```bash
+sudo systemctl stop resolution-solar.service
+sudo journalctl -u resolution-solar.service -n 50 --no-pager
+```
+
+El estado `125` por sí solo no identifica la causa. El registro del servicio
+requiere `sudo` en este servidor. Si `systemctl status` queda en `(END)`, pulsa
+`q` para volver al terminal; `--no-pager` evita esa pantalla.
 
 ## 6. Añadir los dominios a Nginx
 
