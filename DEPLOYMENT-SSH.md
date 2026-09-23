@@ -105,27 +105,19 @@ sudo test ! -e /etc/resolution-solar/app.env && \
   sudo install -m 0600 -o root -g root deploy/app.env.example /etc/resolution-solar/app.env
 ```
 
-Si el archivo ya existe, consérvalo y edítalo. No lo sustituyas por la plantilla.
-Generar el hash de una contraseña nueva de entre 14 y 256 caracteres, desde Bash:
+Si el archivo ya existe, consérvalo. Revisa los valores con:
 
 ```bash
-sudo -v
-read -r -s -p 'Contraseña nueva del panel: ' RSE_ADMIN_PASSWORD
-printf '\n'
-printf '%s' "$RSE_ADMIN_PASSWORD" | sudo -n podman run --rm -i --network=none \
-  localhost/resolution-solar:current node scripts/hash-password.mjs
-unset RSE_ADMIN_PASSWORD
 sudoedit /etc/resolution-solar/app.env
 ```
 
-Pega el resultado completo `scrypt:…` después de `ADMIN_PASSWORD_HASH=`. Guarda
-la contraseña en tu gestor. La configuración relevante ya viene preparada:
+La configuración relevante ya viene preparada. La contraseña se configura
+después con el asistente; no hay que escribirla ni pegar un hash a mano:
 
 ```dotenv
 APP_ORIGIN=https://resolutionsolarenergy.es
 APP_ADDITIONAL_ORIGINS=https://julio.joserabalsegura.com
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=PEGA_AQUI_EL_HASH_COMPLETO
 TRUST_PROXY=
 MAIL_TRANSPORT=formsubmit
 MAIL_TO=juliorabal@hotmail.com
@@ -137,6 +129,22 @@ No hacen falta contraseña de Hotmail, cuenta SMTP ni `MAIL_FROM`. FormSubmit
 envía la notificación y configura la respuesta hacia el email del visitante.
 `TRUST_PROXY` se completa en el paso siguiente.
 
+Configura ahora la contraseña inicial del panel:
+
+```bash
+sudo python3 /var/www/resolution-solar/scripts/configure-production-admin.py
+```
+
+El asistente pide la contraseña dos veces, sin mostrarla. Debe tener entre 14 y
+256 caracteres; guárdala en tu gestor. Genera el hash con la imagen ya construida
+y comprueba la configuración dentro del contenedor, sin red ni acceso a SQLite.
+Solo si la validación pasa guarda `ADMIN_PASSWORD_HASH` en el archivo privado,
+con permisos `600`, y conserva una copia del archivo anterior en la misma carpeta.
+Los demás valores se conservan. No continúes al paso 5 si falla esta comprobación.
+
+El asistente configura el acceso inicial. No cambia la contraseña de una cuenta
+que ya exista en SQLite; para ese caso usa el procedimiento de recuperación.
+
 ## 5. Instalar y arrancar el contenedor con Quadlet
 
 ```bash
@@ -147,13 +155,16 @@ sudo env QUADLET_UNIT_DIRS=/etc/containers/systemd \
   /usr/lib/systemd/system-generators/podman-system-generator --dryrun
 ```
 
-Comprueba que genera `resolution-solar.service` sin errores de claves desconocidas.
+Comprueba que genera `resolution-solar.service` sin errores de claves desconocidas
+y que `ExecStart` incluye `--health-cmd`. La plantilla define `HealthCmd`
+explícitamente: Podman construye en formato OCI por defecto y puede omitir
+el `HEALTHCHECK` del Dockerfile. `HealthOnFailure=kill` requiere ese comando.
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start resolution-solar.service
 sudo systemctl status resolution-solar.service --no-pager
-curl -fsS http://127.0.0.1:3089/healthz
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
 sudo podman inspect resolution-solar --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'
 ```
 
@@ -164,8 +175,8 @@ mediante `sudoedit`, antes de publicar Nginx:
 ```bash
 sudoedit /etc/resolution-solar/app.env
 sudo systemctl restart resolution-solar.service
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
 sudo podman healthcheck run resolution-solar
-curl -fsS http://127.0.0.1:3089/healthz
 ```
 
 Ejemplo si el gateway obtenido es ese: `TRUST_PROXY=10.88.0.1`. No configures
@@ -175,6 +186,53 @@ bridge antes de seguir. Recomprueba este valor si cambias la red de Podman.
 
 Quadlet ya incluye `WantedBy=multi-user.target`: arranca al reiniciar el
 servidor. No se ejecuta `systemctl enable` sobre el servicio generado.
+
+### Si ya se instaló la plantilla sin `HealthCmd`
+
+El error `cannot set on-failure action to kill without a health check` se
+corrige instalando la plantilla actualizada; no requiere reconstruir la imagen
+ni cambiar el archivo de entorno o la base de datos. Después de subir el archivo
+corregido a `/var/www/resolution-solar/deploy/quadlet/resolution-solar.container`:
+
+```bash
+sudo systemctl stop resolution-solar.service
+sudo install -m 0644 /var/www/resolution-solar/deploy/quadlet/resolution-solar.container \
+  /etc/containers/systemd/resolution-solar.container
+sudo systemctl daemon-reload
+sudo systemctl reset-failed resolution-solar.service
+sudo systemctl start resolution-solar.service
+curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
+sudo podman healthcheck run resolution-solar
+sudo podman inspect resolution-solar --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'
+```
+
+Si vuelve a fallar, detener los reintentos y leer el error completo:
+
+```bash
+sudo systemctl stop resolution-solar.service
+sudo journalctl -u resolution-solar.service -n 50 --no-pager
+```
+
+El estado `125` por sí solo no identifica la causa. El registro del servicio
+requiere `sudo` en este servidor. Si `systemctl status` queda en `(END)`, pulsa
+`q` para volver al terminal; `--no-pager` evita esa pantalla.
+
+### Si el contenedor termina con `Configura ADMIN_PASSWORD_HASH`
+
+La aplicación está rechazando un hash vacío o con formato incorrecto. Ejecuta
+el asistente del paso 4 y arranca únicamente si la configuración valida:
+
+```bash
+sudo systemctl stop resolution-solar.service
+sudo python3 /var/www/resolution-solar/scripts/configure-production-admin.py && \
+  sudo systemctl reset-failed resolution-solar.service && \
+  sudo systemctl start resolution-solar.service && \
+  curl --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 -fsS http://127.0.0.1:3089/healthz
+```
+
+No hace falta reconstruir la imagen. La indicación `npm run setup:local` de
+versiones anteriores es para desarrollo local; en este servidor se configura
+`/etc/resolution-solar/app.env` mediante el asistente anterior.
 
 ## 6. Añadir los dominios a Nginx
 
@@ -286,8 +344,8 @@ servidor. Conserva también `/etc/resolution-solar/app.env`, el Quadlet, el site
 operativo de Nginx y la configuración de Certbot. Los backups contienen datos
 personales y sesiones. No copies solo `contacts.sqlite` mientras SQLite use WAL.
 
-Si olvidas la contraseña, genera un nuevo hash como en el paso 4, actualízalo
-en `app.env` y ejecuta:
+Si olvidas la contraseña, ejecuta el asistente del paso 4 para guardar un nuevo
+hash validado en `app.env` y, solo si termina correctamente, ejecuta:
 
 ```bash
 sudo systemctl restart resolution-solar.service
