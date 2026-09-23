@@ -1,6 +1,8 @@
 # Despliegue local, servidor propio y GitHub Pages
 
-La parte pública sigue siendo HTML, CSS y JavaScript vanilla, compatible con GitHub Pages sin instalar dependencias ni compilar. El despliegue en contenedor añade un backend Node.js 24, SQLite, envío SMTP y un panel privado en `/admin/`.
+La parte pública sigue siendo HTML, CSS y JavaScript vanilla, compatible con GitHub Pages sin instalar dependencias ni compilar. El despliegue en contenedor añade un backend Node.js 24, SQLite, avisos mediante FormSubmit o SMTP y un panel privado en `/admin/`.
+
+Para el servidor `ssh remote`, seguir la guía específica [DEPLOYMENT-SSH.md](DEPLOYMENT-SSH.md): Podman + Quadlet + Nginx, HTTPS para los dos dominios y FormSubmit hacia `juliorabal@hotmail.com`. Incluye los comandos y las plantillas preparados para ese servidor.
 
 ## Probar en local con Docker
 
@@ -22,7 +24,7 @@ La contraseña del archivo es solo la **inicial**. En `/admin/`, la opción **Ca
 
 Usar exactamente `localhost`, como indica `APP_ORIGIN`; abrir la web como `127.0.0.1` o con otro puerto exige actualizar esa variable. Los puertos solo escuchan en el equipo local.
 
-El Compose local fuerza el SMTP hacia Mailpit, incluso si `.env` contiene datos de un proveedor real. Los mensajes de prueba no se envían a buzones externos. El aviso incluye todos los campos, idioma, fecha, enlace al panel y Reply-To del remitente.
+El Compose local fuerza `MAIL_TRANSPORT=smtp` y el SMTP hacia Mailpit, incluso si `.env` contiene datos de un proveedor real. Los mensajes de prueba no se envían a buzones externos. El aviso incluye todos los campos, idioma, fecha, enlace al panel y Reply-To del remitente.
 
 Para probar manualmente:
 
@@ -61,20 +63,22 @@ node scripts/test-local.mjs
 
 - Al servir `contacto.html` y las versiones EN/FR/DE, el servidor cambia su destino a `/api/contact` e introduce el idioma y un identificador único de envío. Los archivos originales conservan FormSubmit para GitHub Pages.
 - Las solicitudes se validan en el servidor y se guardan en SQLite antes de confirmar la recepción. La aceptación de privacidad queda fechada. No se almacenan IPs de los visitantes.
-- El aviso SMTP se procesa desde una cola persistente incluida en el mismo registro. Un fallo no borra el mensaje ni devuelve un falso error de recepción al visitante. Los reintentos empiezan a los 30 segundos, aumentan hasta una hora y continúan mientras sea necesario. El panel permite adelantarlos.
-- Repetir una petición con el mismo identificador y contenido no crea otra solicitud. El envío SMTP es de tipo «al menos una vez»: ante un corte justo después de que el proveedor acepte el correo, podría repetirse el aviso. Se reutiliza Message-ID para facilitar su identificación.
+- El aviso de correo se procesa desde una cola persistente incluida en el mismo registro. Un fallo no borra el mensaje ni devuelve un falso error de recepción al visitante. Los reintentos empiezan a los 30 segundos, aumentan hasta una hora y continúan mientras sea necesario. El panel permite adelantarlos.
+- Repetir una petición con el mismo identificador y contenido no crea otra solicitud. El envío del aviso es de tipo «al menos una vez»: ante un corte justo después de que el proveedor acepte el correo, podría repetirse el aviso. Con SMTP se reutiliza Message-ID para facilitar su identificación. FormSubmit requiere activar el buzón destinatario; mientras falta esa activación, el reintento automático se retrasa 24 horas y el panel permite reintentarlo tras activar.
 - El panel ofrece listado paginado, filtros, detalle, pendiente/atendida y estado del aviso. «Responder por email» abre el programa de correo del administrador.
 - Hay un solo administrador, inicializado desde el entorno y almacenado en SQLite; no existe registro público. Las sesiones duran ocho horas, se guardan en SQLite y se revocan al cerrar sesión. Cambiar la contraseña revoca inmediatamente todas las sesiones, incluso en otros dispositivos. Recrear el contenedor conserva la nueva contraseña y no vuelve a aplicar el hash inicial del entorno.
 - Las cookies son HttpOnly y SameSite=Strict, y Secure con HTTPS. Las mutaciones comprueban el origen; las operaciones de la bandeja exigen además un token CSRF. El acceso y el cambio de contraseña comprueban las credenciales y comparten el límite de intentos. Se limitan también los envíos públicos. Las consultas SQL usan parámetros y el panel muestra los mensajes como texto.
 - Solo se sirven páginas y recursos públicos concretos; no se sirve el directorio del proyecto. La base de datos, contraseñas, fuentes del backend y copias no tienen rutas públicas. La imagen se ejecuta sin root y con el sistema de archivos de solo lectura, salvo el volumen de datos.
 
-## Despliegue futuro en el servidor SSH
+## Alternativa en un servidor con Docker Compose
+
+Para `remote` se usa la guía de Podman enlazada al principio. Esta sección conserva la alternativa para un servidor que ya tenga Docker.
 
 El archivo `compose.production.yaml` es independiente del local y no incluye Mailpit. El servidor debe tener Docker y un proxy HTTPS (por ejemplo, el que ya utilices). Ejecutar una sola instancia de la aplicación con el volumen SQLite en disco local.
 
 1. Copiar el código y crear `.env` a partir de `.env.example`, sin copiar las credenciales ni los mensajes de las pruebas.
-2. Configurar `APP_ORIGIN=https://tu-dominio.es`, un usuario y un hash de contraseña nuevos. El backend rechaza HTTP en dominios públicos.
-3. Configurar `MAIL_FROM`, `MAIL_TO` y las credenciales SMTP del proveedor. Para puerto 587: `SMTP_SECURE=false` y `SMTP_REQUIRE_TLS=true`. Para puerto 465: `SMTP_SECURE=true`. Mantener la validación de certificados.
+2. Configurar `APP_ORIGIN=https://resolutionsolarenergy.es`, `APP_ADDITIONAL_ORIGINS=https://julio.joserabalsegura.com`, un usuario y un hash de contraseña nuevos. El backend rechaza HTTP en dominios públicos.
+3. Configurar `MAIL_TRANSPORT=formsubmit` y `MAIL_TO=juliorabal@hotmail.com`; activar el nuevo destinatario desde su buzón. No hace falta SMTP. Si se opta por SMTP, usar `MAIL_TRANSPORT=smtp`, `MAIL_FROM` autorizado y credenciales propias: para 587, `SMTP_SECURE=false` y `SMTP_REQUIRE_TLS=true`; para 465, `SMTP_SECURE=true`.
 4. Configurar `TRUST_PROXY` únicamente con la IP o CIDR del proxy de confianza, que debe sobrescribir `X-Forwarded-For`. El puerto de la aplicación está limitado al loopback del servidor; el proxy publica HTTPS.
 5. Arrancar y comprobar un envío al buzón definitivo:
 
@@ -192,18 +196,18 @@ Despues de publicar, comprueba:
 - El formulario valida los campos y envía las solicitudes mediante FormSubmit.
 - Los filtros y el modal de proyectos funcionan.
 
-## Dominio personalizado futuro
+## Dominio personalizado para la alternativa GitHub Pages
 
-Si mas adelante se conecta `www.resolutionsolarenergy.es`, se puede configurar desde `Settings > Pages > Custom domain` y, si hace falta, anadir un archivo `CNAME` en la raiz con:
+Si en lugar del servidor propio se conecta `resolutionsolarenergy.es` a GitHub Pages, se puede configurar desde `Settings > Pages > Custom domain` y, si hace falta, anadir un archivo `CNAME` en la raiz con:
 
 ```text
-www.resolutionsolarenergy.es
+resolutionsolarenergy.es
 ```
 
 ## Formulario de contacto
 
 Proveedor de la primera prueba: [FormSubmit](https://formsubmit.co/), compatible con GitHub Pages sin servidor propio.
-Destinatario de prueba: `jrabal.segura@gmail.com`, configurado en el `action` de `contacto.html`.
+Destinatario definitivo: `juliorabal@hotmail.com`, configurado en el `action` de las cuatro versiones de `contacto.html` y en `deploy/app.env.example`. En el despliegue propio, el backend guarda la solicitud y la envía a FormSubmit desde su cola. La configuración local sigue usando Mailpit para las pruebas.
 El correo público que aparece en la web es independiente de este destinatario.
 
 ### Activación y prueba de recepción
@@ -217,9 +221,11 @@ El 19 de septiembre de 2026 se realizó una petición real al endpoint con un me
 
 JavaScript usa el endpoint AJAX y solo vacía el formulario cuando el proveedor confirma el envío. Los errores, el tiempo de espera agotado y las respuestas de activación conservan los datos. Durante el envío se bloquean los controles para evitar duplicados. Hay un campo trampa para bots; este filtro no garantiza eliminar todo el spam. Sin JavaScript se mantiene el envío POST estándar de FormSubmit, con su pantalla de confirmación y su protección predeterminada.
 
-### Cambiar al destinatario definitivo
+### Cambiar de destinatario en el futuro
 
-1. Cambiar la dirección del `action` en el formulario de `contacto.html`.
+El destinatario definitivo ya está cambiado; falta activar el nuevo buzón. Para volver a cambiarlo:
+
+1. Cambiar la dirección del `action` en el formulario de `contacto.html`; en servidor propio, cambiar también `MAIL_TO` en el archivo privado de entorno y reiniciar el servicio.
 2. Ejecutar `node scripts/generate-locales.mjs` para regenerar las versiones EN, FR y DE.
 3. Publicar, activar el formulario desde el nuevo buzón y comprobar un envío real.
 

@@ -8,7 +8,7 @@ import { once } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createApp, readConfig } from '../server/app.mjs';
 import { openDatabase } from '../server/database.mjs';
-import { createMailer } from '../server/mail.mjs';
+import { createMailer, formSubmitTransport } from '../server/mail.mjs';
 import { hashPassword, verifyPassword } from '../server/security.mjs';
 
 const password = 'Una-contraseña-de-pruebas-482';
@@ -21,13 +21,13 @@ const payload = (changes = {}) => ({
   privacy: 'on', submission_id: randomUUID(), ...changes
 });
 
-async function fixture(t, sendMail) {
+async function fixture(t, sendMail, envOverrides = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'rse-backend-'));
   let db = openDatabase(join(directory, 'contacts.sqlite'));
   const sent = [];
   const transport = { sendMail: sendMail || (async (mail) => { sent.push(mail); return { accepted: ['owner@example.test'], rejected: [] }; }) };
-  let mailer = createMailer({ db, transport, from: 'web@example.test', to: 'owner@example.test', origin, logger: quiet });
-  const config = { origin, username: 'admin', passwordHash, secure: false, publicDir: resolve('.'), adminDir: resolve('admin'), trustProxy: false };
+  const config = readConfig({ APP_ORIGIN: origin, ADMIN_USERNAME: 'admin', ADMIN_PASSWORD_HASH: passwordHash, ...envOverrides });
+  let mailer = createMailer({ db, transport, from: 'web@example.test', to: 'owner@example.test', origin: config.origin, logger: quiet });
   let server = createApp({ config, db, mailer, logger: quiet }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   let url = `http://127.0.0.1:${server.address().port}`;
@@ -36,7 +36,7 @@ async function fixture(t, sendMail) {
     db.close(); await rm(directory, { recursive: true, force: true });
   });
   async function request(path, { body, method = 'GET', headers = {} } = {}) {
-    return fetch(url + path, { method, headers: { Origin: origin, ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers }, body: body ? JSON.stringify(body) : undefined });
+    return fetch(url + path, { method, headers: { Origin: config.origin, ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers }, body: body ? JSON.stringify(body) : undefined });
   }
   async function login(currentPassword = password) {
     const response = await request('/api/admin/login', { method: 'POST', body: { username: 'admin', password: currentPassword } });
@@ -153,6 +153,27 @@ test('Conserva solicitudes cuando falla SMTP y la cola se recupera desde SQLite'
   assert.equal(db.prepare('SELECT mail_attempts FROM contacts').get().mail_attempts, 2);
 });
 
+test('La activación de FormSubmit conserva la solicitud y permite reintentar después de activarla', async (t) => {
+  let active = false;
+  const transport = formSubmitTransport({ to: 'owner@example.test', origin,
+    fetchRequest: async () => Response.json(active ? { success: true } : { success: false, message: 'Activate your form.' }) });
+  const f = await fixture(t, (mail) => transport.sendMail(mail));
+  assert.equal((await f.request('/api/contact', { method: 'POST', body: payload() })).status, 201);
+  for (let i = 0; i < 30 && f.db.prepare('SELECT mail_status FROM contacts').get().mail_status !== 'failed'; i++) await delay(10);
+  const row = f.db.prepare('SELECT * FROM contacts').get();
+  assert.equal(row.mail_error, 'FORMSUBMIT_ACTIVATION_REQUIRED');
+  assert.equal(row.mail_status, 'failed');
+  assert.ok(row.mail_next_attempt > Date.now() + 23 * 60 * 60 * 1000);
+  await f.mailer.flush();
+  assert.equal(f.db.prepare('SELECT mail_attempts FROM contacts').get().mail_attempts, 1);
+  active = true;
+  const headers = await f.login();
+  assert.equal((await f.request(`/api/admin/contacts/${row.id}/retry-email`, { method: 'POST', headers })).status, 200);
+  for (let i = 0; i < 30 && f.db.prepare('SELECT mail_status FROM contacts').get().mail_status !== 'sent'; i++) await delay(10);
+  assert.equal(f.db.prepare('SELECT mail_status FROM contacts').get().mail_status, 'sent');
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS total FROM contacts').get().total, 1);
+});
+
 test('Caducan las sesiones y se limita la fuerza bruta en el login', async (t) => {
   const { request, login, db } = await fixture(t);
   const headers = await login();
@@ -169,6 +190,35 @@ test('La configuración pública exige HTTPS y un hash de contraseña válido', 
   assert.throws(() => readConfig({ ...env, APP_ORIGIN: 'http://solar.example' }), /HTTPS/);
   assert.throws(() => readConfig({ ...env, APP_ORIGIN: 'https://solar.example/path' }), /origen público/);
   assert.throws(() => readConfig({ ...env, ADMIN_PASSWORD_HASH: 'plaintext' }), /ADMIN_PASSWORD_HASH/);
+  assert.throws(() => readConfig({ ...env, APP_ADDITIONAL_ORIGINS: 'http://alias.example' }), /HTTPS/);
+  assert.throws(() => readConfig({ ...env, APP_ADDITIONAL_ORIGINS: 'https://alias.example/path' }), /origen público/);
+  assert.throws(() => readConfig({ ...env, APP_ADDITIONAL_ORIGINS: 'http://localhost:3080' }), /mismo protocolo/);
+  assert.deepEqual(readConfig({ ...env, APP_ADDITIONAL_ORIGINS: ' https://alias.example/ ,https://solar.example ' }).allowedOrigins,
+    ['https://solar.example', 'https://alias.example']);
+});
+
+test('Formulario y panel funcionan en ambos dominios HTTPS sin admitir otros orígenes', async (t) => {
+  const domains = ['https://resolutionsolarenergy.es', 'https://julio.joserabalsegura.com'];
+  const f = await fixture(t, undefined, { APP_ORIGIN: domains[0], APP_ADDITIONAL_ORIGINS: domains[1] });
+  for (const domain of domains) {
+    const headers = { Origin: domain };
+    assert.equal((await f.request('/api/contact', { method: 'POST', headers, body: payload() })).status, 201);
+    const login = await f.request('/api/admin/login', { method: 'POST', headers, body: { username: 'admin', password } });
+    assert.equal(login.status, 200);
+    const cookie = login.headers.get('set-cookie');
+    assert.match(cookie, /__Host-rse_admin=/);
+    assert.match(cookie, /; Secure/);
+    assert.doesNotMatch(cookie, /Domain=/);
+    const session = await login.json();
+    const authenticated = { ...headers, Cookie: cookie.split(';')[0], 'X-CSRF-Token': session.csrfToken };
+    assert.equal((await f.request('/api/admin/logout', { method: 'POST', headers: { ...authenticated, Origin: 'https://evil.example' } })).status, 403);
+    assert.equal((await f.request('/api/admin/logout', { method: 'POST', headers: { ...headers, Cookie: authenticated.Cookie } })).status, 403);
+    assert.equal((await f.request('/api/admin/logout', { method: 'POST', headers: authenticated })).status, 200);
+  }
+  for (const badOrigin of ['', 'null', 'http://resolutionsolarenergy.es', 'https://resolutionsolarenergy.es.evil.example']) {
+    assert.equal((await f.request('/api/contact', { method: 'POST', headers: { Origin: badOrigin }, body: payload() })).status, 403);
+  }
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS total FROM contacts').get().total, 2);
 });
 
 test('Cambiar contraseña desde el acceso revoca todas las sesiones y persiste después de reiniciar', async (t) => {

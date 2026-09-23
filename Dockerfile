@@ -6,6 +6,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY server/ ./server/
 COPY admin/ ./admin/
 COPY scripts/backup.mjs ./scripts/backup.mjs
+COPY scripts/hash-password.mjs ./scripts/hash-password.mjs
 COPY scripts/reset-admin-password.mjs ./scripts/reset-admin-password.mjs
 COPY *.html ./public/
 COPY en/ ./public/en/

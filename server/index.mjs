@@ -1,14 +1,11 @@
 import { createApp, readConfig } from './app.mjs';
 import { openDatabase } from './database.mjs';
-import { createMailer, smtpTransport } from './mail.mjs';
+import { createMailer, mailTransport } from './mail.mjs';
 
 process.umask(0o077);
 const config = readConfig();
-for (const key of ['SMTP_HOST', 'MAIL_FROM', 'MAIL_TO']) {
-  if (!process.env[key]) throw new Error(`Falta la configuración ${key}.`);
-}
+const transport = mailTransport(process.env, config.origin);
 const db = openDatabase(process.env.DATABASE_PATH || './data/contacts.sqlite');
-const transport = smtpTransport(process.env);
 const mailer = createMailer({ db, transport, from: process.env.MAIL_FROM, to: process.env.MAIL_TO, origin: config.origin });
 const app = createApp({ config, db, mailer });
 const port = Number(process.env.PORT || 3000);
