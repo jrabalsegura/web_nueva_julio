@@ -18,18 +18,29 @@ const languages = ['es', 'en', 'fr', 'de'];
 const uuidPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const errorJson = (res, status, message) => res.status(status).json({ success: false, message });
 
-export function readConfig(env = process.env) {
-  const url = new URL(env.APP_ORIGIN || 'http://localhost:3080');
+function publicOrigin(value, key) {
+  const url = new URL(value);
   if (!['http:', 'https:'].includes(url.protocol) || url.origin !== url.href.replace(/\/$/, '') || url.username || url.password) {
-    throw new Error('APP_ORIGIN debe contener únicamente el origen público, sin rutas.');
+    throw new Error(`${key} debe contener únicamente el origen público, sin rutas.`);
   }
   if (url.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) {
     throw new Error('El acceso público requiere HTTPS. HTTP solo está permitido en localhost.');
   }
+  return url;
+}
+
+export function readConfig(env = process.env) {
+  const url = publicOrigin(env.APP_ORIGIN || 'http://localhost:3080', 'APP_ORIGIN');
+  const additionalOrigins = (env.APP_ADDITIONAL_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean)
+    .map((value) => publicOrigin(value, 'APP_ADDITIONAL_ORIGINS'));
+  if (additionalOrigins.some((extra) => extra.protocol !== url.protocol)) {
+    throw new Error('Todos los orígenes deben usar el mismo protocolo que APP_ORIGIN.');
+  }
   if (!validPasswordHash(env.ADMIN_PASSWORD_HASH)) throw new Error('Configura ADMIN_PASSWORD_HASH: ejecuta npm run setup:local.');
   if (!env.ADMIN_USERNAME || env.ADMIN_USERNAME.length > 100) throw new Error('Configura ADMIN_USERNAME.');
   return {
-    origin: url.origin, secure: url.protocol === 'https:',
+    origin: url.origin, allowedOrigins: [...new Set([url.origin, ...additionalOrigins.map((extra) => extra.origin)])],
+    secure: url.protocol === 'https:',
     username: env.ADMIN_USERNAME, passwordHash: env.ADMIN_PASSWORD_HASH,
     publicDir: resolve(env.PUBLIC_DIR || '.'), adminDir: resolve('admin'),
     trustProxy: env.TRUST_PROXY || false
@@ -38,6 +49,7 @@ export function readConfig(env = process.env) {
 
 export function createApp({ config, db, mailer, logger = console }) {
   const app = express();
+  const allowedOrigins = new Set(config.allowedOrigins || [config.origin]);
   const cookieName = config.secure ? '__Host-rse_admin' : 'rse_admin';
   const cookieOptions = { httpOnly: true, secure: config.secure, sameSite: 'strict', path: '/' };
   // Environment credentials only bootstrap the account. A restart must never
@@ -62,7 +74,7 @@ export function createApp({ config, db, mailer, logger = console }) {
   app.use(express.json({ limit: '32kb' }));
   app.use(express.urlencoded({ extended: false, limit: '32kb', parameterLimit: 30 }));
   app.use('/api', (req, res, next) => {
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get('origin') !== config.origin) {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !allowedOrigins.has(req.get('origin'))) {
       return errorJson(res, 403, 'Origen de la petición no permitido.');
     }
     next();

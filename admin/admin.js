@@ -109,7 +109,7 @@
       });
       actions.append(changeStatus, reply); detail.append(actions, feedback);
       const mail = element('div', undefined, 'mail-panel');
-      mail.append(element('p', contact.mail_status === 'sent' ? `Aviso por correo enviado · ${date(contact.mail_sent_at)}` : contact.mail_status === 'failed' ? 'El aviso por correo no se ha podido enviar. Se reintentará automáticamente; la solicitud está guardada.' : 'El aviso por correo está pendiente de envío. La solicitud ya está guardada.'));
+      mail.append(element('p', contact.mail_status === 'sent' ? `Aviso por correo enviado · ${date(contact.mail_sent_at)}` : contact.mail_error === 'FORMSUBMIT_ACTIVATION_REQUIRED' ? 'Activa el formulario desde el correo de FormSubmit recibido en el buzón destinatario. Después pulsa «Reintentar aviso ahora». La solicitud está guardada; el reintento automático será dentro de 24 horas.' : contact.mail_status === 'failed' ? 'El aviso por correo no se ha podido enviar. Se reintentará automáticamente; la solicitud está guardada.' : 'El aviso por correo está pendiente de envío. La solicitud ya está guardada.'));
       if (contact.mail_status === 'failed') {
         const retry = element('button', 'Reintentar aviso ahora', 'button secondary');
         retry.addEventListener('click', async () => {
