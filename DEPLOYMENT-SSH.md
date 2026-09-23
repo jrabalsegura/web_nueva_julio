@@ -9,7 +9,7 @@ Los comandos indican dónde ejecutarse; no se ha desplegado la aplicación al pr
 - Podman 4.9.3, Quadlet, Nginx y Certbot ya instalados. Docker no está instalado en el servidor.
 - Finanzas y Radar usan contenedores gestionados por systemd mediante Quadlet.
 - El puerto `3089` estaba libre; volver a comprobarlo antes de arrancar.
-- Ambos dominios resolvían a `157.180.32.241`, sin registros AAAA.
+- Los tres nombres (`julio`, dominio principal y `www`) resolvían a `157.180.32.241`, sin registros AAAA.
 - Hay un temporizador `certbot.timer` activo. La revisión por SSH fue de solo lectura;
   los comandos con `sudo` requieren tu contraseña y no se ejecutaron.
 
@@ -24,8 +24,10 @@ https://resolutionsolarenergy.es ─┘                                │
 
 Ambos nombres sirven la web y el panel; no se redirige uno al otro. El dominio
 principal para enlaces de correo y referencias de idiomas es `resolutionsolarenergy.es`.
-La sesión del administrador es independiente en cada dominio. `www` no forma parte
-de este despliegue ni del certificado.
+La sesión del administrador es independiente en cada dominio.
+`https://www.resolutionsolarenergy.es` redirige al dominio principal conservando
+la ruta y los parámetros. El certificado incluye los tres nombres, también `www`:
+el navegador comprueba el certificado antes de seguir una redirección HTTPS.
 
 ## 1. Preparar las carpetas en el servidor
 
@@ -244,28 +246,36 @@ sudo test ! -e /etc/nginx/sites-available/resolution-solar && \
   sudo install -m 0644 deploy/nginx/resolution-solar.conf /etc/nginx/sites-available/resolution-solar
 sudo test ! -e /etc/nginx/sites-enabled/resolution-solar && \
   sudo ln -s /etc/nginx/sites-available/resolution-solar /etc/nginx/sites-enabled/resolution-solar
+sudo test ! -e /etc/nginx/sites-available/resolution-solar-www && \
+  sudo install -m 0644 deploy/nginx/resolution-solar-www.conf /etc/nginx/sites-available/resolution-solar-www
+sudo test ! -e /etc/nginx/sites-enabled/resolution-solar-www && \
+  sudo ln -s /etc/nginx/sites-available/resolution-solar-www /etc/nginx/sites-enabled/resolution-solar-www
 sudo nginx -t && sudo systemctl reload nginx
 curl -fsS -H 'Host: julio.joserabalsegura.com' http://127.0.0.1/healthz
 curl -fsS -H 'Host: resolutionsolarenergy.es' http://127.0.0.1/healthz
+curl -I -H 'Host: www.resolutionsolarenergy.es' http://127.0.0.1/contacto.html
 ```
 
-Ambos deben responder `{"status":"ok"}`. El panel y los formularios se
+Los dos primeros deben responder `{"status":"ok"}`. El último debe redirigir
+a `https://resolutionsolarenergy.es/contacto.html`. El panel y los formularios se
 comprueban después de activar HTTPS. El site tiene que usar un nombre propio;
 no sustituyas el de `joserabalsegura.com` ni los de Finanzas o Radar.
 
-## 7. Activar HTTPS para los dos dominios
+## 7. Activar HTTPS para los tres nombres
 
 Comprobar DNS otra vez:
 
 ```bash
 dig +short A julio.joserabalsegura.com
 dig +short A resolutionsolarenergy.es
+dig +short A www.resolutionsolarenergy.es
 dig +short AAAA julio.joserabalsegura.com
 dig +short AAAA resolutionsolarenergy.es
+dig +short AAAA www.resolutionsolarenergy.es
 ```
 
 Los registros A deben apuntar a `157.180.32.241`. Los AAAA deben estar vacíos
-o apuntar a una IPv6 que sirva esta misma web. El 23/09/2026 los dos A ya eran
+o apuntar a una IPv6 que sirva esta misma web. El 23/09/2026 los tres A ya eran
 correctos y no había AAAA. Si usas un cortafuegos, permite 80 y 443; `3089`
 debe seguir accesible solo en loopback. No hace falta cambiar el acceso SSH.
 
@@ -273,14 +283,15 @@ debe seguir accesible solo en loopback. No hace falta cambiar el acceso SSH.
 sudo certbot --nginx --redirect \
   --cert-name resolution-solar \
   -d julio.joserabalsegura.com \
-  -d resolutionsolarenergy.es
+  -d resolutionsolarenergy.es \
+  -d www.resolutionsolarenergy.es
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot renew --cert-name resolution-solar --dry-run
 systemctl list-timers --all certbot.timer
 ```
 
 Si Certbot pide email de contacto, introduce el del administrador del servidor.
-Un certificado cubre los dos nombres. Certbot añade TLS y la redirección
+Un certificado cubre los tres nombres. Certbot añade TLS y la redirección
 HTTP → HTTPS a la copia instalada de Nginx. **No vuelvas a copiar encima la
 plantilla HTTP durante futuras actualizaciones.**
 
@@ -289,9 +300,39 @@ curl -fsS https://julio.joserabalsegura.com/healthz
 curl -fsS https://resolutionsolarenergy.es/healthz
 curl -I http://julio.joserabalsegura.com/
 curl -I http://resolutionsolarenergy.es/
+curl -I 'https://www.resolutionsolarenergy.es/contacto.html?origen=www'
 ```
 
 Las dos primeras respuestas deben indicar `ok`; las otras deben redirigir a HTTPS.
+La petición a `www` debe pasar la verificación TLS y devolver `Location:
+https://resolutionsolarenergy.es/contacto.html?origen=www`. No se añade `www`
+a `APP_ADDITIONAL_ORIGINS`, porque Nginx redirige antes de servir la aplicación.
+
+### Ampliar un despliegue que ya tiene certificado sin `www`
+
+Instala únicamente el nuevo site de redirección; conserva el site principal
+modificado por Certbot y el archivo privado de entorno. Desde el checkout remoto:
+
+```bash
+sudo install -m 0644 deploy/nginx/resolution-solar-www.conf \
+  /etc/nginx/sites-available/resolution-solar-www
+sudo ln -s /etc/nginx/sites-available/resolution-solar-www \
+  /etc/nginx/sites-enabled/resolution-solar-www
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx --redirect --expand \
+  --cert-name resolution-solar \
+  -d julio.joserabalsegura.com \
+  -d resolutionsolarenergy.es \
+  -d www.resolutionsolarenergy.es
+sudo nginx -t && sudo systemctl reload nginx
+curl -I https://www.resolutionsolarenergy.es/contacto.html
+sudo certbot renew --cert-name resolution-solar --dry-run
+```
+
+Este bloque se usa para añadir `www` por primera vez. Si su site ya existe,
+revísalo antes de continuar y no sobrescribas un archivo que ya tenga TLS.
+La opción `--expand` conserva los nombres anteriores y añade `www`; hay que
+pasar los tres `-d`. No se reconstruye ni se reinicia el contenedor.
 
 ## 8. Activar FormSubmit en Hotmail y probar
 
@@ -341,7 +382,7 @@ sudo podman exec resolution-solar rm /app/data/backup.sqlite
 
 Integra estas copias en tu sistema de backups y guarda otra copia fuera del
 servidor. Conserva también `/etc/resolution-solar/app.env`, el Quadlet, el site
-operativo de Nginx y la configuración de Certbot. Los backups contienen datos
+operativo de Nginx (incluido el site de `www`) y la configuración de Certbot. Los backups contienen datos
 personales y sesiones. No copies solo `contacts.sqlite` mientras SQLite use WAL.
 
 Si olvidas la contraseña, ejecuta el asistente del paso 4 para guardar un nuevo
